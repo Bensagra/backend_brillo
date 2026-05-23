@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Availability {
+  disponible
+  pausado
+  vendido
+}
+
+enum CategoryId {
+  anillos
+  alianzas
+  cadenas
+  pulseras
+  relojes
+  reparaciones
+}
+
+model Jewelry {
+  id            String   @id
+  name          String
+  description   String
+  image         String
+  address       String
+  shortAddress  String
+  distance      Float    @default(0)
+  rating        Float    @default(0)
+  reviewsCount  Int      @default(0)
+  isOpen        Boolean  @default(true)
+  hours         String
+  phone         String
+  whatsapp      String
+  instagram     String
+  specialties   String[]
+  latitude      Float
+  longitude     Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  products      Product[]
+  reviews       Review[]
+}
+
+model Product {
+  id            String       @id
+  jewelryId     String
+  name          String
+  description   String
+  image         String
+  gallery       String[]
+  price         Int?
+  material      String
+  availability  Availability @default(disponible)
+  isFeatured    Boolean      @default(false)
+  category      CategoryId
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  jewelry       Jewelry      @relation(fields: [jewelryId], references: [id], onDelete: Cascade)
+
+  @@index([jewelryId])
+  @@index([category])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  jewelryId   String
+  author      String
+  avatar      String
+  rating      Int
+  date        String
+  comment     String
+  createdAt   DateTime @default(now())
+
+  jewelry     Jewelry  @relation(fields: [jewelryId], references: [id], onDelete: Cascade)
+
+  @@index([jewelryId])
+}
+
+enum LeadStatus {
+  nuevo
+  contactado
+  convertido
+  descartado
+}
+
+enum LeadCatalogSize {
+  pocos
+  medio
+  muchos
+  no_se
+}
+
+model Lead {
+  id           String          @id @default(cuid())
+  ownerName    String
+  email        String
+  whatsapp     String
+  jewelryName  String
+  city         String
+  catalogSize  LeadCatalogSize @default(no_se)
+  message      String?
+  source       String          @default("landing")
+  status       LeadStatus      @default(nuevo)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
